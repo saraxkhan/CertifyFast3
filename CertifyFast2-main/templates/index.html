@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CertifyFast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════
+   RESET & TOKENS
+   ════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#e8e4df;
+  --ink2:#9a9590;
+  --ink3:#5c5652;
+  --bg:#141210;
+  --card:#1c1a18;
+  --card2:#242220;
+  --border:#2e2c29;
+  --gold:#c9a84c;
+  --gold-dim:rgba(201,168,76,.15);
+  --green:#5ecc8a;
+  --red:#d95a5a;
+  --r:8px;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ════════════════════════════════════════════════════════════
+   BACKGROUND TEXTURE  (subtle noise grain via SVG filter)
+   ════════════════════════════════════════════════════════════ */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   LAYOUT
+   ════════════════════════════════════════════════════════════ */
+.wrap{
+  position:relative;z-index:1;
+  max-width:740px;
+  margin:0 auto;
+  padding:56px 24px 100px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   HEADER
+   ════════════════════════════════════════════════════════════ */
+header{text-align:center;margin-bottom:52px}
+.badge{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gold);
+  border:1px solid rgba(201,168,76,.3);
+  padding:5px 14px;border-radius:20px;
+  margin-bottom:22px;
+}
+.badge .live{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);
+  animation:blink 2.2s ease infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+header h1{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(30px,5.5vw,42px);
+  font-weight:600;
+  color:var(--ink);
+  letter-spacing:-.015em;
+  margin-bottom:10px;
+  line-height:1.2;
+}
+header p{
+  font-size:14px;color:var(--ink2);
+  max-width:460px;margin:0 auto;
+  font-weight:300;
+}
+header p code{
+  background:var(--gold-dim);color:var(--gold);
+  padding:2px 7px;border-radius:4px;
+  font-size:13px;font-family:'SF Mono','Fira Code',monospace;
+}
+
+/* ════════════════════════════════════════════════════════════
+   STEP BAR
+   ════════════════════════════════════════════════════════════ */
+.steps{
+  display:flex;align-items:center;justify-content:center;
+  gap:0;margin-bottom:40px;
+}
+.step{display:flex;align-items:center;gap:9px}
+.step__n{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;
+  background:var(--card2);border:1.5px solid var(--border);
+  color:var(--ink3);
+  transition:all .3s;
+}
+.step.active .step__n{border-color:var(--gold);background:var(--gold);color:#141210}
+.step.done   .step__n{border-color:var(--green);background:var(--green);color:#141210}
+.step__label{font-size:11.5px;color:var(--ink3);font-weight:500;white-space:nowrap;transition:color .3s}
+.step.active .step__label{color:var(--gold)}
+.step.done   .step__label{color:var(--green)}
+.step__line{width:48px;height:1.5px;background:var(--border);border-radius:1px;transition:background .3s}
+.step__line.done{background:var(--green)}
+
+/* ════════════════════════════════════════════════════════════
+   CARDS
+   ════════════════════════════════════════════════════════════ */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:26px 28px;
+  margin-bottom:16px;
+  transition:border-color .25s;
+}
+.card:hover{border-color:rgba(201,168,76,.35)}
+.card__head{
+  font-size:11px;font-weight:600;
+  color:var(--ink2);text-transform:uppercase;letter-spacing:.1em;
+  margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+.card__head .ico{font-style:normal;font-size:15px}
+
+/* ════════════════════════════════════════════════════════════
+   DROP ZONES
+   ════════════════════════════════════════════════════════════ */
+.drops{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+@media(max-width:560px){.drops{grid-template-columns:1fr}}
+
+.drop{
+  border:1.5px dashed var(--border);
+  border-radius:var(--r);
+  padding:30px 14px 26px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .25s;
+  position:relative;
+  background:rgba(255,255,255,.015);
+}
+.drop:hover,.drop.over{border-color:var(--gold);background:var(--gold-dim)}
+.drop.ok{border-color:var(--green);background:rgba(94,204,138,.06)}
+.drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.drop__ico{font-size:26px;display:block;margin-bottom:8px;transition:all .25s}
+.drop__title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;transition:color .2s}
+.drop__sub{font-size:11px;color:var(--ink3)}
+.drop__file{font-size:12.5px;font-weight:600;color:var(--green);display:none;word-break:break-all;margin-bottom:2px}
+.drop.ok .drop__ico{display:none}
+.drop.ok .drop__file{display:block}
+.drop.ok .drop__title{color:var(--green);font-size:11px}
+
+/* ════════════════════════════════════════════════════════════
+   BUTTONS
+   ════════════════════════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-family:inherit;font-size:13.5px;font-weight:600;
+  padding:11px 28px;border-radius:var(--r);
+  border:none;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.btn-gold{
+  background:var(--gold);color:#141210;
+  box-shadow:0 2px 16px rgba(201,168,76,.25);
+}
+.btn-gold:hover{background:#d4b25a;box-shadow:0 4px 24px rgba(201,168,76,.35);transform:translateY(-1px)}
+.btn-gold:active{transform:translateY(0)}
+.btn-gold:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+
+.btn-outline{
+  background:transparent;color:var(--ink2);
+  border:1px solid var(--border);font-size:11.5px;padding:6px 16px;
+}
+.btn-outline:hover{border-color:var(--ink2);color:var(--ink)}
+
+.row-center{display:flex;justify-content:center}
+
+/* ════════════════════════════════════════════════════════════
+   ANALYSIS PANEL  (appears after analyze)
+   ════════════════════════════════════════════════════════════ */
+.panel{display:none}
+.panel.show{display:block;animation:slide .35s ease}
+@keyframes slide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* stats */
+.stats{display:flex;gap:10px;margin-bottom:16px}
+.stat{
+  flex:1;background:var(--card2);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 12px;text-align:center;
+}
+.stat__n{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--ink)}
+.stat__n.gold{color:var(--gold)}
+.stat__n.green{color:var(--green)}
+.stat__n.amber{color:#e8a84c}
+.stat__l{font-size:9.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+/* mapping list */
+.map-list{list-style:none}
+.map-list li{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 0;border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+.map-list li:last-child{border-bottom:none}
+.map-list .ph{
+  font-family:'SF Mono','Fira Code',monospace;
+  font-size:11px;background:var(--gold-dim);color:var(--gold);
+  padding:3px 8px;border-radius:4px;white-space:nowrap;
+}
+.map-list .arrow{color:var(--ink3);font-size:13px}
+.map-list .col{color:var(--ink2);font-size:12.5px}
+.map-list .col.missing{color:var(--ink3);font-style:italic}
+.map-list .badge-ok,.map-list .badge-warn{
+  margin-left:auto;font-size:10px;font-weight:600;
+  padding:3px 8px;border-radius:4px;white-space:nowrap;
+}
+.badge-ok{background:rgba(94,204,138,.12);color:var(--green)}
+.badge-warn{background:rgba(232,168,76,.12);color:#e8a84c}
+
+/* preview table */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{
+  text-align:left;padding:9px 13px;
+  background:rgba(255,255,255,.03);
+  color:var(--ink3);font-weight:600;font-size:10px;
+  text-transform:uppercase;letter-spacing:.06em;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{padding:8px 13px;color:var(--ink2);border-bottom:1px solid rgba(255,255,255,.04)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.025)}
+.tbl-note{font-size:10.5px;color:var(--ink3);margin-top:7px;font-style:italic}
+
+/* generate section */
+.gen-section{text-align:center;padding-top:4px}
+.gen-section p{color:var(--ink2);font-size:13px;margin-bottom:16px;font-weight:300}
+.reset-btn{
+  display:block;margin:14px auto 0;
+  background:none;border:none;color:var(--ink3);
+  font-size:11.5px;cursor:pointer;font-family:inherit;
+  text-decoration:underline;text-underline-offset:3px;
+}
+.reset-btn:hover{color:var(--ink2)}
+
+/* ════════════════════════════════════════════════════════════
+   SPINNER OVERLAY
+   ════════════════════════════════════════════════════════════ */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(20,18,16,.88);
+  backdrop-filter:blur(5px);
+  z-index:100;
+  flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+.overlay.show{display:flex;animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.spinner{
+  width:40px;height:40px;border-radius:50%;
+  border:2.5px solid var(--border);
+  border-top-color:var(--gold);
+  animation:spin .65s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay p{color:var(--ink2);font-size:14px;font-weight:300}
+
+/* ════════════════════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--card);border:1px solid var(--border);
+  color:var(--ink);padding:11px 22px;border-radius:var(--r);
+  font-size:13px;font-weight:500;
+  box-shadow:0 6px 28px rgba(0,0,0,.45);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  z-index:200;max-width:88vw;text-align:center;
+  white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:var(--red);color:var(--red)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="badge"><span class="live"></span> CertifyFast</div>
+  <h1>Bulk Certificate Generator</h1>
+  <p>Drop a PDF template containing <code>{{placeholders}}</code> and a CSV or Excel sheet. Certificates are generated instantly with correct fonts, sizes and alignment.</p>
+</header>
+
+<!-- STEP BAR -->
+<div class="steps" id="steps">
+  <div class="step active"><div class="step__n">1</div><span class="step__label">Upload</span></div>
+  <div class="step__line" id="line1"></div>
+  <div class="step"><div class="step__n">2</div><span class="step__label">Preview</span></div>
+  <div class="step__line" id="line2"></div>
+  <div class="step"><div class="step__n">3</div><span class="step__label">Generate</span></div>
+</div>
+
+<!-- UPLOAD CARD -->
+<div class="card" id="uploadCard">
+  <div class="card__head"><i class="ico">📁</i> Upload Files</div>
+  <div class="drops">
+    <div class="drop" id="drop1">
+      <input type="file" id="inp1" accept=".pdf">
+      <span class="drop__ico">📄</span>
+      <div class="drop__file" id="name1">—</div>
+      <div class="drop__title">PDF Template</div>
+      <div class="drop__sub">with {{placeholders}}</div>
+    </div>
+    <div class="drop" id="drop2">
+      <input type="file" id="inp2" accept=".csv,.xlsx,.xls">
+      <span class="drop__ico">📊</span>
+      <div class="drop__file" id="name2">—</div>
+      <div class="drop__title">Data File</div>
+      <div class="drop__sub">CSV or Excel</div>
+    </div>
+  </div>
+  <div class="row-center">
+    <button class="btn btn-gold" id="analyzeBtn" disabled>Analyze &nbsp;→</button>
+  </div>
+</div>
+
+<!-- ANALYSIS PANEL (hidden until analyzed) -->
+<div class="panel" id="panel">
+
+  <!-- stats row -->
+  <div class="stats" id="statsRow"></div>
+
+  <!-- mapping card -->
+  <div class="card">
+    <div class="card__head"><i class="ico">🔗</i> Placeholder Mapping</div>
+    <ul class="map-list" id="mapList"></ul>
+  </div>
+
+  <!-- preview card -->
+  <div class="card">
+    <div class="card__head"><i class="ico">👁‍🗨</i> Data Preview</div>
+    <div class="tbl-wrap" id="tblWrap"></div>
+    <p class="tbl-note" id="tblNote"></p>
+  </div>
+
+  <!-- generate card -->
+  <div class="card">
+    <div class="card__head" style="justify-content:center"><i class="ico">⚡</i> Generate Certificates</div>
+    <div class="gen-section">
+      <p id="genDesc">Ready to generate.</p>
+      <button class="btn btn-gold" id="genBtn">Generate &amp; Download ZIP</button>
+      <button class="reset-btn" id="resetBtn">↩ Start over</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <p id="overlayMsg">Analyzing…</p>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+{% raw %}
+<script>
+(function(){
+
+"use strict";
+
+/* ── refs ── */
+const drop1=document.getElementById('drop1'),
+      drop2=document.getElementById('drop2'),
+      inp1 =document.getElementById('inp1'),
+      inp2 =document.getElementById('inp2'),
+      nm1  =document.getElementById('name1'),
+      nm2  =document.getElementById('name2'),
+      aBtn =document.getElementById('analyzeBtn'),
+      panel=document.getElementById('panel'),
+      stats=document.getElementById('statsRow'),
+      mapL =document.getElementById('mapList'),
+      tblW =document.getElementById('tblWrap'),
+      tblN =document.getElementById('tblNote'),
+      gBtn =document.getElementById('genBtn'),
+      rBtn =document.getElementById('resetBtn'),
+      ovl  =document.getElementById('overlay'),
+      ovlM =document.getElementById('overlayMsg'),
+      toast=document.getElementById('toast');
+
+const stepEls=document.querySelectorAll('.step');
+const line1=document.getElementById('line1'),
+      line2=document.getElementById('line2');
+
+let sid=null, toastT=null;
+
+/* ── drag & drop ── */
+function wire(drop,inp,nameEl){
+  drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
+  drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+  drop.addEventListener('drop',e=>{
+    e.preventDefault();drop.classList.remove('over');
+    const f=e.dataTransfer.files[0];
+    if(f) apply(inp,f,drop,nameEl);
+  });
+  inp.addEventListener('change',()=>{if(inp.files[0]) apply(inp,inp.files[0],drop,nameEl)});
+}
+function apply(inp,file,drop,nameEl){
+  const ext=file.name.split('.').pop().toLowerCase();
+  const ok= inp===inp1 ? ['pdf'] : ['csv','xlsx','xls'];
+  if(!ok.includes(ext)){toast_(`.${ok.join('/.').toUpperCase()} only`,'err');return}
+  const dt=new DataTransfer(); dt.items.add(file); inp.files=dt.files;
+  nameEl.textContent=file.name;
+  drop.classList.add('ok');
+  checkBtn();
+}
+function checkBtn(){aBtn.disabled=!(inp1.files[0]&&inp2.files[0])}
+wire(drop1,inp1,nm1);
+wire(drop2,inp2,nm2);
+
+/* ── step indicator ── */
+function setStep(n){
+  stepEls.forEach((s,i)=>{
+    const sn=i+1;
+    s.className='step';
+    if(sn<n) s.classList.add('done');
+    else if(sn===n) s.classList.add('active');
+  });
+  line1.className='step__line'+(n>1?' done':'');
+  line2.className='step__line'+(n>2?' done':'');
+}
+
+/* ── overlay ── */
+function showOvl(m){ovlM.textContent=m;ovl.classList.add('show')}
+function hideOvl(){ovl.classList.remove('show')}
+
+/* ── toast ── */
+function toast_(msg,type){
+  toast.textContent=msg;
+  toast.className='toast'+(type==='err'?' err':type==='ok'?' ok':'');
+  toast.classList.add('show');
+  if(toastT) clearTimeout(toastT);
+  toastT=setTimeout(()=>toast.classList.remove('show'),3000);
+}
+
+/* ── ANALYZE ── */
+aBtn.addEventListener('click',async()=>{
+  showOvl('Analyzing your files…');
+  aBtn.disabled=true;
+  try{
+    const fd=new FormData();
+    fd.append('template',inp1.files[0]);
+    fd.append('data',inp2.files[0]);
+    const r=await fetch('/api/analyze',{method:'POST',body:fd});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Analysis failed');
+    sid=j.session_id;
+    render(j);
+    setStep(2);
+    panel.classList.add('show');
+    panel.scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){toast_(e.message,'err');aBtn.disabled=false}
+  finally{hideOvl()}
+});
+
+/* ── RENDER analysis ── */
+function render(d){
+  const warn=d.unmatched.length;
+
+  // stats
+  stats.innerHTML=`
+    <div class="stat"><div class="stat__n green">${d.total}</div><div class="stat__l">Certificates</div></div>
+    <div class="stat"><div class="stat__n gold">${d.matched.length}</div><div class="stat__l">Matched</div></div>
+    <div class="stat"><div class="stat__n ${warn?'amber':'green'}">${warn}</div><div class="stat__l">Unmatched</div></div>`;
+
+ // mapping
+let ml = '';
+d.matched.forEach(m => {
+  ml += `<li>
+    <span class="ph">{{${m.placeholder}}}</span>
+    <span class="arrow">←</span>
+    <span class="col">${m.column}</span>
+    <span class="badge-ok">✓ Matched</span>
+  </li>`;
+});
+d.unmatched.forEach(k => {
+  ml += `<li>
+    <span class="ph">{{${k}}}</span>
+    <span class="arrow">←</span>
+    <span class="col missing">No matching column</span>
+    <span class="badge-warn">⚠ Missing</span>
+  </li>`;
+});
+mapL.innerHTML = ml;
+
+
+  // table
+  if(d.preview.length){
+    let t=`<table><thead><tr>${d.columns.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+    d.preview.forEach(row=>{
+      t+=`<tr>${d.columns.map(c=>`<td>${row[c]||'—'}</td>`).join('')}</tr>`;
+    });
+    t+='</tbody></table>';
+    tblW.innerHTML=t;
+    tblN.textContent=`Showing first ${d.preview.length} of ${d.total} rows.`;
+  }
+
+  document.getElementById('genDesc').textContent=
+    `${d.total} certificate${d.total>1?'s':''} will be generated and downloaded as a ZIP.`;
+  setStep(3);
+}
+
+/* ── GENERATE ── */
+gBtn.addEventListener('click',async()=>{
+  if(!sid){toast_('Please analyze files first.','err');return}
+  showOvl('Generating certificates…');
+  gBtn.disabled=true;
+  try{
+    const fd=new FormData(); fd.append('session_id',sid);
+    const r=await fetch('/api/generate',{method:'POST',body:fd});
+    if(!r.ok){const j=await r.json();throw new Error(j.error||'Failed')}
+    const blob=await r.blob();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='certificates.zip';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast_('✓ Download started!','ok');
+  }catch(e){toast_(e.message,'err')}
+  finally{hideOvl();gBtn.disabled=false}
+});
+
+/* ── RESET ── */
+rBtn.addEventListener('click',()=>{
+  sid=null;
+  inp1.value=''; inp2.value='';
+  nm1.textContent='—'; nm2.textContent='—';
+  drop1.classList.remove('ok'); drop2.classList.remove('ok');
+  panel.classList.remove('show');
+  setStep(1); aBtn.disabled=true;
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+})();
+</script>
+{% endraw %}
+
+</body>
+</html>

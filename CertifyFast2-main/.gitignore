@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+output/
+uploads/*.pdf
+uploads/*.csv
+uploads/*.xlsx
+*.zip
+.env
+venv/
+nohup.out
