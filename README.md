@@ -2,7 +2,7 @@
 
 Generate professional certificates with **QR codes** and **digital signatures** for verification.
 
-## 🎯 Features
+## Features
 
 ### Core Features
 - ✅ **Universal Template Support** - Works with any PDF template containing `{{placeholders}}`
@@ -11,28 +11,11 @@ Generate professional certificates with **QR codes** and **digital signatures** 
 - ✅ **Batch Generation** - Generate hundreds of certificates in seconds
 
 ### Security & Verification
-- 🔐 **Digital Signatures** - Each certificate is cryptographically signed
-- 📱 **QR Code Integration** - Automatic QR code on each certificate
-- ✅ **Online Verification** - Scan QR to verify authenticity
-- 💾 **Certificate Database** - All issued certificates stored in SQLite
+- **Digital Signatures** - Each certificate is cryptographically signed
+- **QR Code Integration** - Automatic QR code on each certificate
+- **Online Verification** - Scan QR to verify authenticity
+- **Certificate Database** - All issued certificates stored in SQLite
 
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# 1. Extract the zip
-unzip CertifyFast2-main.zip
-cd CertifyFast2-main
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Run the app
-python app.py
-```
-
-Visit: `http://localhost:5001`
 
 ### Usage
 
