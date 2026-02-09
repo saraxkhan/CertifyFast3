@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+*.db
+
+# Generated files
+output/
+certificates/
+uploads/
+
+# OS / editor
+.DS_Store
+.vscode/

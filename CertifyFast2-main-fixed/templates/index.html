@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CertifyFast</title>
+<title>CertifyFast - Bulk Certificate Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -23,6 +23,7 @@
   --gold-dim:rgba(201,168,76,.15);
   --green:#5ecc8a;
   --red:#d95a5a;
+  --blue:#5a9cd9;
   --r:8px;
 }
 html{scroll-behavior:smooth}
@@ -37,7 +38,7 @@ body{
 }
 
 /* ════════════════════════════════════════════════════════════
-   BACKGROUND TEXTURE  (subtle noise grain via SVG filter)
+   BACKGROUND TEXTURE
    ════════════════════════════════════════════════════════════ */
 body::before{
   content:'';
@@ -51,7 +52,7 @@ body::before{
    ════════════════════════════════════════════════════════════ */
 .wrap{
   position:relative;z-index:1;
-  max-width:740px;
+  max-width:800px;
   margin:0 auto;
   padding:56px 24px 100px;
 }
@@ -86,7 +87,7 @@ header h1{
 }
 header p{
   font-size:14px;color:var(--ink2);
-  max-width:460px;margin:0 auto;
+  max-width:520px;margin:0 auto 16px;
   font-weight:300;
 }
 header p code{
@@ -94,6 +95,22 @@ header p code{
   padding:2px 7px;border-radius:4px;
   font-size:13px;font-family:'SF Mono','Fira Code',monospace;
 }
+
+/* INFO BOX */
+.info-box{
+  background:rgba(90,156,217,.1);
+  border:1px solid rgba(90,156,217,.3);
+  border-radius:var(--r);
+  padding:14px 18px;
+  margin:20px auto;
+  max-width:600px;
+  font-size:12.5px;
+  color:var(--ink2);
+  line-height:1.7;
+}
+.info-box strong{color:var(--blue);font-weight:600}
+.info-box ul{margin:8px 0 0 20px}
+.info-box li{margin-bottom:4px}
 
 /* ════════════════════════════════════════════════════════════
    STEP BAR
@@ -139,6 +156,60 @@ header p code{
 }
 .card__head .ico{font-style:normal;font-size:15px}
 
+/* Tooltip */
+.tooltip{
+  position:relative;
+  display:inline-block;
+  cursor:help;
+  margin-left:4px;
+}
+.tooltip-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:rgba(201,168,76,.2);
+  color:var(--gold);
+  font-size:11px;
+  font-weight:700;
+  border:1px solid rgba(201,168,76,.3);
+}
+.tooltip-text{
+  visibility:hidden;
+  opacity:0;
+  position:absolute;
+  z-index:100;
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--ink);
+  padding:12px 14px;
+  border-radius:6px;
+  font-size:12px;
+  width:280px;
+  bottom:125%;
+  left:50%;
+  transform:translateX(-50%);
+  transition:opacity .25s,visibility .25s;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+  line-height:1.5;
+}
+.tooltip-text::after{
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  margin-left:-5px;
+  border-width:5px;
+  border-style:solid;
+  border-color:var(--border) transparent transparent transparent;
+}
+.tooltip:hover .tooltip-text{
+  visibility:visible;
+  opacity:1;
+}
+
 /* ════════════════════════════════════════════════════════════
    DROP ZONES
    ════════════════════════════════════════════════════════════ */
@@ -159,12 +230,73 @@ header p code{
 .drop.ok{border-color:var(--green);background:rgba(94,204,138,.06)}
 .drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 .drop__ico{font-size:26px;display:block;margin-bottom:8px;transition:all .25s}
-.drop__title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;transition:color .2s}
+.drop__title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;transition:color .2s;
+  display:flex;align-items:center;justify-content:center;gap:4px;}
 .drop__sub{font-size:11px;color:var(--ink3)}
 .drop__file{font-size:12.5px;font-weight:600;color:var(--green);display:none;word-break:break-all;margin-bottom:2px}
 .drop.ok .drop__ico{display:none}
 .drop.ok .drop__file{display:block}
 .drop.ok .drop__title{color:var(--green);font-size:11px}
+
+/* Signature drop (full width, optional) */
+.drop-sig{
+  grid-column:1/-1;
+  border-style:dashed;
+  border-color:rgba(90,156,217,.3);
+  background:rgba(90,156,217,.05);
+}
+.drop-sig:hover{
+  border-color:var(--blue);
+  background:rgba(90,156,217,.12);
+}
+.drop-sig.ok{
+  border-color:var(--green);
+  background:rgba(94,204,138,.06);
+}
+.drop__optional{
+  display:inline-block;
+  font-size:9px;
+  background:rgba(90,156,217,.2);
+  color:var(--blue);
+  padding:2px 6px;
+  border-radius:3px;
+  margin-left:6px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+/* ════════════════════════════════════════════════════════════
+   OPTIONS SECTION
+   ════════════════════════════════════════════════════════════ */
+.options{
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--border);
+}
+.option-group{
+  margin-bottom:16px;
+}
+.option-label{
+  display:block;
+  font-size:12px;
+  font-weight:600;
+  color:var(--ink2);
+  margin-bottom:8px;
+}
+.option-select{
+  width:100%;
+  background:var(--card2);
+  border:1px solid var(--border);
+  color:var(--ink);
+  padding:10px 12px;
+  border-radius:var(--r);
+  font-family:inherit;
+  font-size:13px;
+  cursor:pointer;
+  transition:border-color .2s;
+}
+.option-select:hover{border-color:var(--gold)}
+.option-select:focus{outline:none;border-color:var(--gold)}
 
 /* ════════════════════════════════════════════════════════════
    BUTTONS
@@ -193,7 +325,7 @@ header p code{
 .row-center{display:flex;justify-content:center}
 
 /* ════════════════════════════════════════════════════════════
-   ANALYSIS PANEL  (appears after analyze)
+   ANALYSIS PANEL
    ════════════════════════════════════════════════════════════ */
 .panel{display:none}
 .panel.show{display:block;animation:slide .35s ease}
@@ -229,115 +361,186 @@ header p code{
 .map-list .col.missing{color:var(--ink3);font-style:italic}
 .map-list .badge-ok,.map-list .badge-warn{
   margin-left:auto;font-size:10px;font-weight:600;
-  padding:3px 8px;border-radius:4px;white-space:nowrap;
+  padding:3px 8px;border-radius:4px;
 }
-.badge-ok{background:rgba(94,204,138,.12);color:var(--green)}
-.badge-warn{background:rgba(232,168,76,.12);color:#e8a84c}
+.map-list .badge-ok{background:rgba(94,204,138,.15);color:var(--green)}
+.map-list .badge-warn{background:rgba(232,168,76,.15);color:#e8a84c}
 
-/* preview table */
-.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);margin-top:2px}
+/* table */
+.tbl-wrap{overflow-x:auto;margin-bottom:8px}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{
-  text-align:left;padding:9px 13px;
-  background:rgba(255,255,255,.03);
-  color:var(--ink3);font-weight:600;font-size:10px;
-  text-transform:uppercase;letter-spacing:.06em;
-  border-bottom:1px solid var(--border);white-space:nowrap;
-}
-td{padding:8px 13px;color:var(--ink2);border-bottom:1px solid rgba(255,255,255,.04)}
+th{background:var(--card2);color:var(--ink2);text-align:left;padding:8px 10px;
+   font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+td{padding:8px 10px;border-bottom:1px solid var(--border)}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,.025)}
-.tbl-note{font-size:10.5px;color:var(--ink3);margin-top:7px;font-style:italic}
+.tbl-note{font-size:11px;color:var(--ink3);font-style:italic}
 
 /* generate section */
-.gen-section{text-align:center;padding-top:4px}
-.gen-section p{color:var(--ink2);font-size:13px;margin-bottom:16px;font-weight:300}
+.gen-section{text-align:center}
+.gen-section p{font-size:13px;color:var(--ink2);margin-bottom:18px}
+.gen-section .btn{margin-bottom:12px}
 .reset-btn{
-  display:block;margin:14px auto 0;
-  background:none;border:none;color:var(--ink3);
-  font-size:11.5px;cursor:pointer;font-family:inherit;
-  text-decoration:underline;text-underline-offset:3px;
+  background:transparent;border:none;color:var(--ink3);
+  font-size:11.5px;cursor:pointer;padding:6px 12px;
+  transition:color .2s;text-decoration:underline;
 }
-.reset-btn:hover{color:var(--ink2)}
+.reset-btn:hover{color:var(--ink)}
 
 /* ════════════════════════════════════════════════════════════
-   SPINNER OVERLAY
+   OVERLAY & TOAST
    ════════════════════════════════════════════════════════════ */
 .overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(20,18,16,.88);
-  backdrop-filter:blur(5px);
-  z-index:100;
-  flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  position:fixed;inset:0;background:rgba(0,0,0,.85);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:999;opacity:0;visibility:hidden;transition:all .3s;
 }
-.overlay.show{display:flex;animation:fade .2s}
-@keyframes fade{from{opacity:0}to{opacity:1}}
+.overlay.show{opacity:1;visibility:visible}
 .spinner{
-  width:40px;height:40px;border-radius:50%;
-  border:2.5px solid var(--border);
-  border-top-color:var(--gold);
-  animation:spin .65s linear infinite;
+  width:40px;height:40px;border:3px solid var(--border);
+  border-top-color:var(--gold);border-radius:50%;
+  animation:spin .8s linear infinite;margin-bottom:16px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.overlay p{color:var(--ink2);font-size:14px;font-weight:300}
+.overlay p{color:var(--ink2);font-size:14px}
 
-/* ════════════════════════════════════════════════════════════
-   TOAST
-   ════════════════════════════════════════════════════════════ */
 .toast{
-  position:fixed;bottom:24px;left:50%;
-  transform:translateX(-50%) translateY(80px);
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
   background:var(--card);border:1px solid var(--border);
-  color:var(--ink);padding:11px 22px;border-radius:var(--r);
-  font-size:13px;font-weight:500;
-  box-shadow:0 6px 28px rgba(0,0,0,.45);
-  transition:transform .3s cubic-bezier(.4,0,.2,1);
-  z-index:200;max-width:88vw;text-align:center;
-  white-space:nowrap;
+  padding:12px 20px;border-radius:var(--r);font-size:13px;
+  box-shadow:0 4px 24px rgba(0,0,0,.5);
+  opacity:0;visibility:hidden;transition:all .25s;z-index:1000;
 }
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast.err{border-color:var(--red);color:var(--red)}
+.toast.show{opacity:1;visibility:visible}
 .toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
 </style>
 </head>
 <body>
+
 <div class="wrap">
 
-<!-- HEADER -->
 <header>
-  <div class="badge"><span class="live"></span> CertifyFast</div>
+  <div class="badge"><span class="live"></span>CertifyFast</div>
   <h1>Bulk Certificate Generator</h1>
-  <p>Drop a PDF template containing <code>{{placeholders}}</code> and a CSV or Excel sheet. Certificates are generated instantly with correct fonts, sizes and alignment.</p>
+  <p>
+    Drop a PDF template containing <code>{{placeholders}}</code> and a CSV or Excel sheet.
+    Certificates are generated instantly with correct fonts, sizes and alignment.
+  </p>
+  
+  <div class="info-box">
+    <strong>💡 How it works:</strong>
+    <ul>
+      <li><strong>Placeholders are case-insensitive:</strong> <code>{{Student}}</code>, <code>{{student}}</code>, or <code>{{STUDENT}}</code> all match a column named "Student"</li>
+      <li><strong>Column names must match:</strong> If your template has <code>{{name}}</code>, your Excel needs a "Name" or "name" column</li>
+      <li><strong>Each certificate gets:</strong> Unique QR code, digital signature, and verification URL</li>
+      <li><strong>Optional:</strong> Upload a signature image to add to all certificates</li>
+    </ul>
+  </div>
 </header>
 
-<!-- STEP BAR -->
-<div class="steps" id="steps">
-  <div class="step active"><div class="step__n">1</div><span class="step__label">Upload</span></div>
+<!-- STEP INDICATOR -->
+<div class="steps">
+  <div class="step active">
+    <div class="step__n">1</div>
+    <div class="step__label">Upload</div>
+  </div>
   <div class="step__line" id="line1"></div>
-  <div class="step"><div class="step__n">2</div><span class="step__label">Preview</span></div>
+  <div class="step">
+    <div class="step__n">2</div>
+    <div class="step__label">Preview</div>
+  </div>
   <div class="step__line" id="line2"></div>
-  <div class="step"><div class="step__n">3</div><span class="step__label">Generate</span></div>
+  <div class="step">
+    <div class="step__n">3</div>
+    <div class="step__label">Generate</div>
+  </div>
 </div>
 
 <!-- UPLOAD CARD -->
-<div class="card" id="uploadCard">
-  <div class="card__head"><i class="ico">📁</i> Upload Files</div>
+<div class="card">
+  <div class="card__head">
+    <i class="ico">📂</i> Upload Files
+    <div class="tooltip">
+      <span class="tooltip-icon">?</span>
+      <div class="tooltip-text">
+        <strong>Required:</strong> PDF template with {{placeholders}} and data file (CSV/Excel).<br>
+        <strong>Optional:</strong> Signature image (PNG/JPG with transparent background recommended).
+      </div>
+    </div>
+  </div>
+  
   <div class="drops">
     <div class="drop" id="drop1">
       <input type="file" id="inp1" accept=".pdf">
       <span class="drop__ico">📄</span>
       <div class="drop__file" id="name1">—</div>
-      <div class="drop__title">PDF Template</div>
+      <div class="drop__title">
+        PDF Template
+        <div class="tooltip">
+          <span class="tooltip-icon">?</span>
+          <div class="tooltip-text">
+            Your certificate template with placeholders like {{Student}}, {{Course}}, etc. Placeholders are case-insensitive.
+          </div>
+        </div>
+      </div>
       <div class="drop__sub">with {{placeholders}}</div>
     </div>
+    
     <div class="drop" id="drop2">
       <input type="file" id="inp2" accept=".csv,.xlsx,.xls">
       <span class="drop__ico">📊</span>
       <div class="drop__file" id="name2">—</div>
-      <div class="drop__title">Data File</div>
+      <div class="drop__title">
+        Data File
+        <div class="tooltip">
+          <span class="tooltip-icon">?</span>
+          <div class="tooltip-text">
+            Excel or CSV with columns matching your template placeholders. Column names are case-insensitive.
+          </div>
+        </div>
+      </div>
       <div class="drop__sub">CSV or Excel</div>
     </div>
+    
+    <div class="drop drop-sig" id="drop3">
+      <input type="file" id="inp3" accept=".png,.jpg,.jpeg">
+      <span class="drop__ico">✍️</span>
+      <div class="drop__file" id="name3">—</div>
+      <div class="drop__title">
+        Signature Image
+        <span class="drop__optional">Optional</span>
+        <div class="tooltip">
+          <span class="tooltip-icon">?</span>
+          <div class="tooltip-text">
+            Upload a signature/stamp image to add to all certificates. PNG with transparent background works best. This is added to the visual certificate, separate from the cryptographic signature used for verification.
+          </div>
+        </div>
+      </div>
+      <div class="drop__sub">PNG or JPG (transparent background recommended)</div>
+    </div>
   </div>
+  
+  <div class="options">
+    <div class="option-group">
+      <label class="option-label">QR Code Position</label>
+      <select class="option-select" id="qrPos">
+        <option value="bottom-right">Bottom Right</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="top-right">Top Right</option>
+        <option value="top-left">Top Left</option>
+      </select>
+    </div>
+    
+    <div class="option-group" id="sigPosGroup" style="display:none">
+      <label class="option-label">Signature Position</label>
+      <select class="option-select" id="sigPos">
+        <option value="bottom-center">Bottom Center</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="bottom-right">Bottom Right</option>
+      </select>
+    </div>
+  </div>
+  
   <div class="row-center">
     <button class="btn btn-gold" id="analyzeBtn" disabled>Analyze &nbsp;→</button>
   </div>
@@ -384,19 +587,21 @@ tr:hover td{background:rgba(255,255,255,.025)}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-{% raw %}
 <script>
+{% raw %}
 (function(){
-
 "use strict";
 
 /* ── refs ── */
 const drop1=document.getElementById('drop1'),
       drop2=document.getElementById('drop2'),
+      drop3=document.getElementById('drop3'),
       inp1 =document.getElementById('inp1'),
       inp2 =document.getElementById('inp2'),
+      inp3 =document.getElementById('inp3'),
       nm1  =document.getElementById('name1'),
       nm2  =document.getElementById('name2'),
+      nm3  =document.getElementById('name3'),
       aBtn =document.getElementById('analyzeBtn'),
       panel=document.getElementById('panel'),
       stats=document.getElementById('statsRow'),
@@ -407,7 +612,10 @@ const drop1=document.getElementById('drop1'),
       rBtn =document.getElementById('resetBtn'),
       ovl  =document.getElementById('overlay'),
       ovlM =document.getElementById('overlayMsg'),
-      toast=document.getElementById('toast');
+      toast=document.getElementById('toast'),
+      qrPos=document.getElementById('qrPos'),
+      sigPos=document.getElementById('sigPos'),
+      sigPosGroup=document.getElementById('sigPosGroup');
 
 const stepEls=document.querySelectorAll('.step');
 const line1=document.getElementById('line1'),
@@ -416,28 +624,42 @@ const line1=document.getElementById('line1'),
 let sid=null, toastT=null;
 
 /* ── drag & drop ── */
-function wire(drop,inp,nameEl){
+function wire(drop,inp,nameEl,required=true){
   drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
   drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
   drop.addEventListener('drop',e=>{
     e.preventDefault();drop.classList.remove('over');
     const f=e.dataTransfer.files[0];
-    if(f) apply(inp,f,drop,nameEl);
+    if(f) apply(inp,f,drop,nameEl,required);
   });
-  inp.addEventListener('change',()=>{if(inp.files[0]) apply(inp,inp.files[0],drop,nameEl)});
+  inp.addEventListener('change',()=>{if(inp.files[0]) apply(inp,inp.files[0],drop,nameEl,required)});
 }
-function apply(inp,file,drop,nameEl){
+function apply(inp,file,drop,nameEl,required){
   const ext=file.name.split('.').pop().toLowerCase();
-  const ok= inp===inp1 ? ['pdf'] : ['csv','xlsx','xls'];
-  if(!ok.includes(ext)){toast_(`.${ok.join('/.').toUpperCase()} only`,'err');return}
+  let ok=[];
+  if(inp===inp1) ok=['pdf'];
+  else if(inp===inp2) ok=['csv','xlsx','xls'];
+  else if(inp===inp3) ok=['png','jpg','jpeg'];
+  
+  if(!ok.includes(ext)){
+    toast_(`.${ok.join('/.').toUpperCase()} only`,'err');
+    return;
+  }
   const dt=new DataTransfer(); dt.items.add(file); inp.files=dt.files;
   nameEl.textContent=file.name;
   drop.classList.add('ok');
+  
+  // Show signature position if signature uploaded
+  if(inp===inp3){
+    sigPosGroup.style.display='block';
+  }
+  
   checkBtn();
 }
 function checkBtn(){aBtn.disabled=!(inp1.files[0]&&inp2.files[0])}
-wire(drop1,inp1,nm1);
-wire(drop2,inp2,nm2);
+wire(drop1,inp1,nm1,true);
+wire(drop2,inp2,nm2,true);
+wire(drop3,inp3,nm3,false); // signature is optional
 
 /* ── step indicator ── */
 function setStep(n){
@@ -461,7 +683,7 @@ function toast_(msg,type){
   toast.className='toast'+(type==='err'?' err':type==='ok'?' ok':'');
   toast.classList.add('show');
   if(toastT) clearTimeout(toastT);
-  toastT=setTimeout(()=>toast.classList.remove('show'),3000);
+  toastT=setTimeout(()=>toast.classList.remove('show'),3500);
 }
 
 /* ── ANALYZE ── */
@@ -472,6 +694,8 @@ aBtn.addEventListener('click',async()=>{
     const fd=new FormData();
     fd.append('template',inp1.files[0]);
     fd.append('data',inp2.files[0]);
+    if(inp3.files[0]) fd.append('signature',inp3.files[0]);
+    
     const r=await fetch('/api/analyze',{method:'POST',body:fd});
     const j=await r.json();
     if(!r.ok) throw new Error(j.error||'Analysis failed');
@@ -494,26 +718,17 @@ function render(d){
     <div class="stat"><div class="stat__n gold">${d.matched.length}</div><div class="stat__l">Matched</div></div>
     <div class="stat"><div class="stat__n ${warn?'amber':'green'}">${warn}</div><div class="stat__l">Unmatched</div></div>`;
 
- // mapping
-let ml = '';
-d.matched.forEach(m => {
-  ml += `<li>
-    <span class="ph">{{${m.placeholder}}}</span>
-    <span class="arrow">←</span>
-    <span class="col">${m.column}</span>
-    <span class="badge-ok">✓ Matched</span>
-  </li>`;
-});
-d.unmatched.forEach(k => {
-  ml += `<li>
-    <span class="ph">{{${k}}}</span>
-    <span class="arrow">←</span>
-    <span class="col missing">No matching column</span>
-    <span class="badge-warn">⚠ Missing</span>
-  </li>`;
-});
-mapL.innerHTML = ml;
-
+  // mapping
+  let ml='';
+  d.matched.forEach(m=>{
+    ml+=`<li><span class="ph">{{${m.placeholder}}}</span><span class="arrow">←</span>
+         <span class="col">${m.column}</span><span class="badge-ok">✓ Matched</span></li>`;
+  });
+  d.unmatched.forEach(k=>{
+    ml+=`<li><span class="ph">{{${k}}}</span><span class="arrow">←</span>
+         <span class="col missing">No matching column</span><span class="badge-warn">⚠ Missing</span></li>`;
+  });
+  mapL.innerHTML=ml;
 
   // table
   if(d.preview.length){
@@ -526,18 +741,24 @@ mapL.innerHTML = ml;
     tblN.textContent=`Showing first ${d.preview.length} of ${d.total} rows.`;
   }
 
-  document.getElementById('genDesc').textContent=
-    `${d.total} certificate${d.total>1?'s':''} will be generated and downloaded as a ZIP.`;
+  let genMsg = `${d.total} certificate${d.total>1?'s':''} will be generated`;
+  if(d.has_signature) genMsg += ' with signature';
+  genMsg += ' and downloaded as a ZIP.';
+  document.getElementById('genDesc').textContent=genMsg;
   setStep(3);
 }
 
 /* ── GENERATE ── */
 gBtn.addEventListener('click',async()=>{
   if(!sid){toast_('Please analyze files first.','err');return}
-  showOvl('Generating certificates…');
+  showOvl('Generating certificates… This may take a moment.');
   gBtn.disabled=true;
   try{
-    const fd=new FormData(); fd.append('session_id',sid);
+    const fd=new FormData();
+    fd.append('session_id',sid);
+    fd.append('qr_position',qrPos.value);
+    fd.append('sig_position',sigPos.value);
+    
     const r=await fetch('/api/generate',{method:'POST',body:fd});
     if(!r.ok){const j=await r.json();throw new Error(j.error||'Failed')}
     const blob=await r.blob();
@@ -547,7 +768,7 @@ gBtn.addEventListener('click',async()=>{
     document.body.appendChild(a); a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
-    toast_('✓ Download started!','ok');
+    toast_('✓ Certificates generated! Download started.','ok');
   }catch(e){toast_(e.message,'err')}
   finally{hideOvl();gBtn.disabled=false}
 });
@@ -555,17 +776,17 @@ gBtn.addEventListener('click',async()=>{
 /* ── RESET ── */
 rBtn.addEventListener('click',()=>{
   sid=null;
-  inp1.value=''; inp2.value='';
-  nm1.textContent='—'; nm2.textContent='—';
-  drop1.classList.remove('ok'); drop2.classList.remove('ok');
+  inp1.value=''; inp2.value=''; inp3.value='';
+  nm1.textContent='—'; nm2.textContent='—'; nm3.textContent='—';
+  drop1.classList.remove('ok'); drop2.classList.remove('ok'); drop3.classList.remove('ok');
+  sigPosGroup.style.display='none';
   panel.classList.remove('show');
   setStep(1); aBtn.disabled=true;
   window.scrollTo({top:0,behavior:'smooth'});
 });
 
 })();
-</script>
 {% endraw %}
-
+</script>
 </body>
 </html>

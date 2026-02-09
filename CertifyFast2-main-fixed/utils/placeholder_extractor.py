@@ -129,34 +129,55 @@ def _register_embedded_fonts(doc):
     seen_xrefs = set()
 
     for page in doc:
-        for font_tuple in page.get_fonts(ext=True):
-            # font_tuple: (xref, ext, type, basefont, name, encoding, ...)
-            xref      = font_tuple[0]
-            ext       = font_tuple[1]   # e.g. "ttf", "otf"
-            basefont  = font_tuple[3]   # e.g. "AAAAAA+Garet-Bold"
-            name      = font_tuple[4]   # e.g. "Garet-Bold"
+        for font_info in page.get_fonts(full=True):
+            xref     = font_info[0]
+            ext      = font_info[1]      # e.g. "ttf", "otf", "n/a"
+            fonttype = font_info[2]      # e.g. "Type1", "TrueType", "CIDFontType0"
+            basefont = font_info[3]      # e.g. "AAAAAA+Garet-Bold"
 
-            if xref in seen_xrefs:
+            if xref in seen_xrefs or xref <= 0:
                 continue
             seen_xrefs.add(xref)
 
-            # Strip the subset prefix (6 uppercase letters + "+")
+            # Strip subset prefix (6 uppercase letters + "+")
             clean_name = basefont.split("+")[-1] if "+" in basefont else basefont
-
-            if clean_name in registered:
+            if not clean_name or clean_name in registered:
                 continue
 
+            # Try multiple extraction methods
+            font_bytes = None
+            
+            # Method 1: extract_font (most reliable for embedded fonts)
             try:
-                # Extract the font file bytes
-                font_bytes = doc.get_font_image(xref)
-                if font_bytes and len(font_bytes) > 100:
-                    # Register it so insert_text can use it
-                    doc.insert_font(fontname=clean_name, fontbytes=font_bytes)
-                    registered[clean_name] = clean_name
+                font_data = doc.extract_font(xref)
+                if font_data and font_data[0]:  # font_data is (basename, ext, type, content)
+                    font_bytes = font_data[-1]  # content is the last element
             except Exception:
-                # get_font_image might not work for all font types;
-                # that's fine, we fall back to standard fonts
                 pass
+
+            # Method 2: xref_get_key (for font streams)
+            if not font_bytes:
+                try:
+                    # Some fonts have their data in /FontFile, /FontFile2, or /FontFile3
+                    for key in ["FontFile", "FontFile2", "FontFile3"]:
+                        try:
+                            stream = doc.xref_get_key(xref, key)
+                            if stream and stream[1]:  # stream is (type, content)
+                                font_bytes = stream[1]
+                                break
+                        except Exception:
+                            continue
+                except Exception:
+                    pass
+
+            # If we got font bytes, try to register them
+            if font_bytes and len(font_bytes) > 100:
+                try:
+                    doc.insert_font(fontname=clean_name, fontbuffer=font_bytes)
+                    registered[clean_name] = clean_name
+                except Exception:
+                    # Registration failed - font might be corrupt or unsupported format
+                    pass
 
     return registered
 
@@ -167,7 +188,7 @@ def _pick_font(embedded_name, registered_fonts, is_bold):
 
     Priority:
     1. If we successfully registered the embedded font, use it.
-    2. Otherwise fall back to standard Helvetica variants.
+    2. Otherwise fall back to Helvetica (always available in PyMuPDF).
     """
     # Strip subset prefix
     clean = embedded_name.split("+")[-1] if "+" in embedded_name else embedded_name
@@ -175,5 +196,7 @@ def _pick_font(embedded_name, registered_fonts, is_bold):
     if clean in registered_fonts:
         return clean
 
-    # Fallback to standard fonts
-    return "helv-bold" if is_bold else "helv"
+    # Fallback to Helvetica - always available
+    # Note: we use 'helv' for both regular and bold since we can't guarantee
+    # that 'hebo' (Helvetica-Bold) is available in all PyMuPDF builds
+    return "helv"

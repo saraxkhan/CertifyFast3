@@ -2,3 +2,5 @@ flask
 pandas
 openpyxl
 pymupdf
+qrcode[pil]
+Pillow
